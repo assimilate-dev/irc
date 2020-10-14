@@ -10,3 +10,4 @@ conf/cert.pem
 conf/key.pem
 conf/opers.conf
 
+.gdbargs
