@@ -9,5 +9,6 @@ inspircd
 conf/cert.pem
 conf/key.pem
 conf/opers.conf
+conf/secrets.conf
 
 .gdbargs
