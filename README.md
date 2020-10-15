@@ -202,9 +202,19 @@ You can (and should) use this password hashing business to set a password for th
 
 
 
-### Permanent Channels
+### Modules
 
+I am not going to go in-depth on configuring specific modules because otherwise this document would be infinitely longer. If you have questions about specific modules, feel free to ask. On my very small server I enabled the following during the initial setup:
 
-
-### IP Cloaking
+- m_md5.so
+- m_sha256.so
+- m_blockcaps.so
+- m_cloaking.so
+- m_conn_join.so
+- m_conn_umodes.so
+- m_lockserv.so
+- m_messageflood.so
+- m_operprefix.so
+- m_password_hash.so
+- m_permchannels.so
 
