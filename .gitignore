@@ -9,5 +9,13 @@ inspircd
 conf/cert.pem
 conf/key.pem
 conf/secrets.conf
+conf/links.conf
 
 .gdbargs
+
+# irc services ignore
+services/bin
+services/data
+services/lib
+services/log
+services/conf/services.conf
