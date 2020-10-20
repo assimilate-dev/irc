@@ -1,6 +1,8 @@
 # irc.assimilate.dev
 The IRC server is setup and running. Big thanks to the guide at [JamieWeb](https://www.jamieweb.net/blog/inspircd-linux-guide/). As usual, there were slight differences which made things difficult. I'll do my best to call those out below.
 
+If you see any differences or updates that I need to make please feel free to submit a pull request on the README.
+
 
 
 ## Amazon Lightsail
@@ -217,4 +219,68 @@ I am not going to go in-depth on configuring specific modules because otherwise 
 - m_operprefix.so
 - m_password_hash.so
 - m_permchannels.so
+
+
+
+## Anope Services
+
+If you want to be able to register nicknames and channels with Nickserv and Chanserv, you need a services provider. I chose the latest release of [Anope](https://www.anope.org/) because it was there and I found what looked like a decent guide. Just like before, the vast majority of this guide comes copy/pasted from [another source](https://www.howtoforge.com/tutorial/how-to-build-your-own-irc-server-with-inspircd-and-anope/#step-install-and-configure-anope-services) and I will provide my update commentary where necessary.
+
+
+
+### Initial Setup
+
+I installed these services on the same server that is running IRC. I dropped all the downloads in my home folder alongside the initial files I downloaded for InspIRCd.
+
+```
+wget https://github.com/anope/anope/archive/2.0.8.tar.gz
+tar -xzvf 2.0.8.tar.gz
+```
+
+Once that is complete you can run the configuration. The one thing I changed in the configuration was the directory where Anope is installed. When I setup InspIRCd I set the run folder as my git repository. Since I was looking to keep the configuration files for Anope sourced in the same repo I changed the installed directory to `~/inspircd-2.0.29/run/services/`.
+
+```
+cd anope-2.0.8/
+./Config
+```
+
+Once the configuration is complete you need to go to the build directory to install. The build directory will be in the directory where you ran the configuration, not the installed directory you indicated during the configuration.
+
+```
+cd build/
+make
+make install
+```
+
+
+
+### Configuration
+
+Once that is complete, you can do some cleanup and make your way to the services directory which is the install directory you indicated during the configuration.
+
+```
+cd ~
+rm -rf anope-2.0.8/
+
+# this could differ for you depending on the install directory you chose
+cd ~/inspircd-2.0.29/run/services
+```
+
+Overall the configuration was surpisingly easy. I think I spent more time cleaning up the files and getting everything ready to go into source control than I did actually configuring.
+
+You can pretty much follow along exactly with the guide (though some of the line numbers may be different) as well as my [services.example.conf file](https://github.com/assimilate-dev/irc/blob/main/services/conf/services.example.conf). The one major thing I will note is that in order for Anope services to connect to your IRC server, you will need to make sure you have the following in your configuration file for InspIRCd:
+
+```
+<bind
+      address=""
+      port="7000"
+      type="servers">
+```
+
+If you're all done start it up and see what happens.
+
+```
+cd ~/inspircd-2.0.29/run/services
+./anoperc start
+```
 
