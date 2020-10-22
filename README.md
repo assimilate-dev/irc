@@ -7,6 +7,8 @@ If you see any differences or updates that I need to make please feel free to su
 
 ## Amazon Lightsail
 
+___
+
 ### Instance Type
 
 For this project, I chose the $3.50 price-per-month instance: Linux/Unix - OS Only - Ubuntu 18.04. So far it has performed well with absolutely no issues.
@@ -165,7 +167,7 @@ Some configuration files ask you to specify passwords. It's never a good idea to
 
 - m_password_hash.so
 
-Most of the time enabling modules is easy.
+Most of the time enabling modules is easy. Just uncomment them in the modules file and they will load when you reload InspIRCd.
 
 ```
 nano run/conf/modules.conf
@@ -227,11 +229,51 @@ I am not going to go in-depth on configuring specific modules because otherwise 
 
 
 ## SSL Certificates
-To be added
+
+___
+
+I was dreading SSL certificates. I thought I was going to have to pay money either through AWS or some other certificate authority. Turns out you can do it all for free through [Let's Encrypt using certbot](https://certbot.eff.org/lets-encrypt/ubuntubionic-other). I follow the instructions for my setup and OS exactly, choosing the standalone option since (at the time) I didn't have a webserver running on the machine.
+
+```
+sudo certbot certonly --standalone
+```
+
+Certbot places your certificate files in `/etc/letsencrypt/live/irc.assimilate.dev/` directory. Obviously you should replace irc.assimilate.dev with your site indicated during configuration. These can be copied into various locations as needed for InspIRCd as well as Apache (later on in this document).
+
+Check my [*inspircd.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/inspircd.conf) file for ssl-specific setup paying close attention to the  gnutls and bind blocks.
+
+```
+<gnutls cafile="conf/ca.pem"
+        certfile="conf/cert.pem"
+        keyfile="conf/key.pem">
+
+...
+
+<bind
+      address=""
+      port="6697"
+      type="clients"
+      ssl="gnutls">
+```
+
+There are also modules that you will need to enable by uncommenting them in [*modules.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/modules.conf). I honestly can't remember which ones I enabled specifically for this but spend some time reading through the helpful comments in `docs/conf/modules.conf.example` and taking a look at the modules I have uncommented in my module file.
+
+At the very least, I enabled the following:
+
+- m_ssl_gnutls.so
+- m_cap.so
+
+You should know that the file naming is a little weird so here is the mapping:
+
+- fullchain.pem -> certfile
+- privkey.pem -> keyfile
+- chain.pem -> cafile
 
 
 
 ## Anope Services
+
+___
 
 If you want to be able to register nicknames and channels with Nickserv and Chanserv, you need a services provider. I chose the latest release of [Anope](https://www.anope.org/) because it was there and I found what looked like a decent guide. Just like before, the vast majority of this guide comes copy/pasted from [another source](https://www.howtoforge.com/tutorial/how-to-build-your-own-irc-server-with-inspircd-and-anope/#step-install-and-configure-anope-services) and I will provide my update commentary where necessary.
 
@@ -275,9 +317,9 @@ rm -rf anope-2.0.8/
 cd ~/inspircd-2.0.29/run/services
 ```
 
-Overall the configuration was surpisingly easy. I think I spent more time cleaning up the files and getting everything ready to go into source control than I did actually configuring.
+Overall the configuration was surprisingly easy. I think I spent more time cleaning up the files and getting everything ready to go into source control than I did actually configuring.
 
-You can pretty much follow along exactly with the guide (though some of the line numbers may be different) as well as my [services.example.conf file](https://github.com/assimilate-dev/irc/blob/main/services/conf/services.example.conf). The one major thing I will note is that in order for Anope services to connect to your IRC server, you will need to make sure you have the following in your configuration file for InspIRCd:
+You can pretty much follow along exactly with the guide (though some of the line numbers may be different) as well as my [*services.example.conf*](https://github.com/assimilate-dev/irc/blob/main/services/conf/services.example.conf) file. The one major thing I will note is that in order for Anope services to connect to your IRC server, you will need to make sure you have the following in your configuration file for InspIRCd:
 
 ```
 <bind
@@ -293,9 +335,18 @@ cd ~/inspircd-2.0.29/run/services
 ./anoperc start
 ```
 
+There are also modules that you will need to enable by uncommenting them in [*modules.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/modules.conf). I honestly can't remember which ones I enabled specifically for this but spend some time reading through the helpful comments in `docs/conf/modules.conf.example` and taking a look at the modules I have uncommented in my module file.
+
+At the very least, I enabled the following:
+
+- m_spanningtree.so
+- m_sasl.so
+
 
 
 ## Static Site @ irc.assimilate.dev
+
+___
 
 I really wanted a static site to show when visiting [irc.assimilate.dev](https://irc.assimilate.dev/) from a web browser. The first thing I should have done (but didn't) was revisit my Lightsail instance networking configuration to make sure that port 443 was open.
 
@@ -320,7 +371,7 @@ sudo apt install apache2
 
 That was enough to get me up and running at my public IP http://44.242.29.15/
 
-Because that IP is already pointed to [irc.assimilate.dev](https://irc.assimilate.dev/) I ignored the portion of the tutorial where they create the gci site. I only update three files:
+Because that IP is already pointed to [irc.assimilate.dev](https://irc.assimilate.dev/) I ignored the portion of the tutorial where they create the gci site. I only updated three files:
 
 - [/var/www/html/index.html](https://github.com/assimilate-dev/irc/blob/main/apache-conf/index.html)
 - [/etc/apache2/sites-available/000-default.conf](https://github.com/assimilate-dev/irc/blob/main/apache-conf/000-default.conf)
@@ -363,5 +414,7 @@ I used [Typora](https://typora.io/) plus the Xydark theme to create my single pa
 
 ## Certificate Renewal
 
-The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I scheduled a daily run of [copy-certs.sh](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
+___
+
+The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I scheduled a daily run of [*copy-certs.sh*](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
 
