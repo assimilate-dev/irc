@@ -1,4 +1,4 @@
-# irc.assimilate.dev
+# [irc.assimilate.dev](https://irc.assimilate.dev/)
 The IRC server is setup and running. Big thanks to the guide at [JamieWeb](https://www.jamieweb.net/blog/inspircd-linux-guide/). As usual, there were slight differences which made things difficult. I'll do my best to call those out below.
 
 If you see any differences or updates that I need to make please feel free to submit a pull request on the README.
@@ -32,7 +32,11 @@ Right now this is setup to allow any IP for SSH which is admittedly bad but unti
 
 Lightsail allows you to attach a static IP to your instance. Do that.
 
+
+
 ![Static IP Example](https://mrt-public.s3-us-west-2.amazonaws.com/static_ip.PNG)
+
+
 
 I purchased my domain via Google Domains because they had the *.dev* top-level domain and that seemed pretty cool. Once I purchased *assimilate.dev* at Google Domains, switch back to the Lightsail web interface and click "Create DNS Zone." The options are simple and self-explanatory. After it is created, you are provided a list of name servers.
 
@@ -283,4 +287,58 @@ If you're all done start it up and see what happens.
 cd ~/inspircd-2.0.29/run/services
 ./anoperc start
 ```
+
+
+
+## Static Site @ irc.assimilate.dev
+
+I really wanted a static site to show when visiting [irc.assimilate.dev](https://irc.assimilate.dev/) from a web browser. The first thing I should have done (but didn't) was revisit my Lightsail instance networking configuration to make sure that port 443 was open.
+
+| Application | Protocol | Port      | Restricted To |
+| ----------- | -------- | --------- | ------------- |
+| SSH         | TCP      | 22        | Any IP        |
+| HTTP        | TCP      | 80        | Any IP        |
+| HTTPS       | TCP      | 443       | Any IP        |
+| Custom      | TCP      | 6660-6669 | Any IP        |
+| Custom      | TCP      | 6697      | Any IP        |
+
+
+
+### Initial Setup
+
+This part was shockingly simple and I pretty much followed the instructions from the [Ubuntu Tutorial](https://ubuntu.com/tutorials/install-and-configure-apache) without too many changes.
+
+```
+sudo apt update
+sudo apt install apache2
+```
+
+That was enough to get me up and running at my public IP http://44.242.29.15/
+
+Because that IP is already pointed to [irc.assimilate.dev](https://irc.assimilate.dev/) I ignored the portion of the tutorial where they create the gci site. I only update three files:
+
+- [/var/www/html/index.html](https://github.com/assimilate-dev/irc/blob/main/apache-conf/index.html)
+- [/etc/apache2/sites-available/000-default.conf](https://github.com/assimilate-dev/irc/blob/main/apache-conf/000-default.conf)
+- [/etc/apache2/sites-available/default-ssl.conf](https://github.com/assimilate-dev/irc/blob/main/apache-conf/default-ssl.conf)
+
+I've added these three files to source control along with a script to copy them out of my git directory and into the place where Apache looks for them. I scheduled the script to run twice an hour at 05 and 35 minutes.
+
+```
+chmod +x copy-certs.sh
+sudo crontab -e
+
+# add this to the bottom of crontab, uncommented
+5,35 * * * * /path/to/git/copy-conf.sh
+```
+
+I also had to copy my SSL certificate files into the location defined in the configuration. I could have probably kept them all in the place they were without duplication but I wasn't looking to add too many variables to the equation that could cause failure. Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
+
+```
+sudo a2enmod ssl
+sudo service apache2 restart
+```
+
+That's pretty much it.
+
+I used [Typora](https://typora.io/) plus the Xydark theme to create my single page with markdown and export it to index.html.
 
