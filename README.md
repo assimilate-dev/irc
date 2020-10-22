@@ -226,6 +226,11 @@ I am not going to go in-depth on configuring specific modules because otherwise 
 
 
 
+## SSL Certificates
+To be added
+
+
+
 ## Anope Services
 
 If you want to be able to register nicknames and channels with Nickserv and Chanserv, you need a services provider. I chose the latest release of [Anope](https://www.anope.org/) because it was there and I found what looked like a decent guide. Just like before, the vast majority of this guide comes copy/pasted from [another source](https://www.howtoforge.com/tutorial/how-to-build-your-own-irc-server-with-inspircd-and-anope/#step-install-and-configure-anope-services) and I will provide my update commentary where necessary.
