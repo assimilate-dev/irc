@@ -328,10 +328,22 @@ chmod +x copy-certs.sh
 sudo crontab -e
 
 # add this to the bottom of crontab, uncommented
-5,35 * * * * /path/to/git/copy-conf.sh
+5,35 * * * * /home/ubuntu/inspircd-2.0.29/run/apache-conf/copy-conf.sh
 ```
 
-I also had to copy my SSL certificate files into the location defined in the configuration. I could have probably kept them all in the place they were without duplication but I wasn't looking to add too many variables to the equation that could cause failure. Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
+This doesn't really do much except make sure I don't need to run copy commands after pulling the latest changes onto the server.
+
+I also had to copy my SSL certificate files into the location defined in the configuration.
+
+```
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/fullchain.pem /etc/ssl/certs/irc.assimilate.dev.crt
+
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/private/irc.assimilate.dev.key
+
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/certs/ca-certificates.crt
+```
+
+I could have probably kept them all in the place they were without duplication but I wasn't looking to add too many variables to the equation that could cause failure. Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
 
 ```
 sudo a2enmod ssl
@@ -341,4 +353,10 @@ sudo service apache2 restart
 That's pretty much it.
 
 I used [Typora](https://typora.io/) plus the Xydark theme to create my single page with markdown and export it to index.html.
+
+
+
+## Certificate Renewal
+
+The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I scheduled a daily run of [copy-certs.sh](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
 
