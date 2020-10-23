@@ -416,5 +416,5 @@ I used [Typora](https://typora.io/) plus the Xydark theme to create my single pa
 
 ___
 
-The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I scheduled a daily run of [*copy-certs.sh*](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
+The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I [scheduled a daily run](https://suchsecurity.com/using-letsencrypt-for-your-ircd.html) of [copy-certs.sh](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
 
