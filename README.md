@@ -1,30 +1,33 @@
 # [irc.assimilate.dev](https://irc.assimilate.dev/)
-The IRC server is setup and running. Big thanks to the guide at [JamieWeb](https://www.jamieweb.net/blog/inspircd-linux-guide/). As usual, there were slight differences which made things difficult. I'll do my best to call those out below.
+The IRC server is setup and running. I'm currently using Hexchat to connect on my Windows workstation. If you logon and register a nickname you can use SASL to assume your nick on login.
 
-If you see any differences or updates that I need to make please feel free to submit a pull request on the README.
+![Hexchat Config](https://mrt-public.s3-us-west-2.amazonaws.com/hexchat.PNG)
+
+Big thanks to the guide at [JamieWeb](https://www.jamieweb.net/blog/inspircd-linux-guide/). As usual, there were slight differences in OS and versions which made things difficult. I'll do my best to call those out below.
+
+If you see any differences or updates that I need to make please feel free to submit a pull request on the README at [assimilate-dev/irc](https://github.com/assimilate-dev/irc).
 
 
 
 ## Amazon Lightsail
 
-___
-
 ### Instance Type
 
-For this project, I chose the $3.50 price-per-month instance: Linux/Unix - OS Only - Ubuntu 18.04. So far it has performed well with absolutely no issues.
+I know that serverless is the way but for this project we need an always-on server. I chose AWS Lightsail which seems to be a user-friendly interface on top of already-existing EC2 functionality. I went with the $3.50 price-per-month instance: Linux/Unix - OS Only - Ubuntu 18.04. So far it has performed well with absolutely zero issues.
 
-When I was creating the instance, I created a new keypair named *irc* and downloaded the file which will be super important later.
+When you are creating the instance it is easy to miss the keypair option. I created a new keypair named *irc* and downloaded the file which will be super important later.
 
 
 
 ### Networking
 
-Right now this is setup to allow any IP for SSH which is admittedly bad but until I have a VPN available I don't have a static IP. For now I just toggle the rule on/off as needed when I need to connect and make changes.
+Your Lightsail instance will begin with a set of defaults for port forwarding. You shouldn't leave SSH access open to any IP but I don't have a static IP so I toggle this option on and off as needed. I also have a static website setup at [irc.assimilate.dev](https://irc.assimilate.dev) so I have opened 80 and 443. IRC will run on 6660-6669 and 6697; the later for SSL.
 
 | Application | Protocol | Port      | Restricted To |
 | ----------- | -------- | --------- | ------------- |
 | SSH         | TCP      | 22        | Any IP        |
 | HTTP        | TCP      | 80        | Any IP        |
+| HTTPS       | TCP      | 443       | Any IP        |
 | Custom      | TCP      | 6660-6669 | Any IP        |
 | Custom      | TCP      | 6697      | Any IP        |
 
@@ -32,7 +35,7 @@ Right now this is setup to allow any IP for SSH which is admittedly bad but unti
 
 ### Static IP and DNS
 
-Lightsail allows you to attach a static IP to your instance. Do that.
+Lightsail makes it easy to attach a static IP to your instance. Do that.
 
 
 
@@ -40,7 +43,7 @@ Lightsail allows you to attach a static IP to your instance. Do that.
 
 
 
-I purchased my domain via Google Domains because they had the *.dev* top-level domain and that seemed pretty cool. Once I purchased *assimilate.dev* at Google Domains, switch back to the Lightsail web interface and click "Create DNS Zone." The options are simple and self-explanatory. After it is created, you are provided a list of name servers.
+I purchased my domain via Google Domains because they had the *.dev* top-level domain and that seemed pretty cool. Once I purchased *assimilate.dev* at Google Domains, I switched back to the Lightsail web interface and clicked "Create DNS Zone." The options are simple and self-explanatory. After it is created, you are provided a list of name servers.
 
 
 
@@ -48,7 +51,7 @@ I purchased my domain via Google Domains because they had the *.dev* top-level d
 
 
 
-Switch back over to the Google Domain web interface where I purchased my domain, under the DNS section, I removed the existing name servers and added the ones that Lightsail provided.
+Switch back over to the Google Domain web interface where the domain was purchased. Under the DNS section, remove the existing name servers and add the ones that Lightsail provided.
 
 
 
@@ -56,7 +59,7 @@ Switch back over to the Google Domain web interface where I purchased my domain,
 
 
 
-Once you've removed the old name servers and added the Lightsail name servers, I was done with the Google Domain interface. Back in Lightsail, I added an A record for irc.assimilate.dev resolving to the static IP that I obtained from Lightsail.
+Once you've removed the old name servers and added the Lightsail name servers, you're done with the Google Domain interface. Back in Lightsail, I added an A record for irc.assimilate.dev resolving to the static IP that I obtained from Lightsail.
 
 
 
@@ -70,23 +73,23 @@ Now that your server is setup you can install and configure IRC. To access your 
 
 
 
-This method is convenient but it does make it kind of a pain to copy/paste text so I still like to connect with SHH in a terminal. From the Windows command line:
+This method is convenient but it does make it kind of a pain to copy/paste text so I still like to connect with SSH in a terminal. From the Windows command line:
 
 ```ssh 
 ssh -i irc.pem ubuntu@irc.assimilate.dev
 ```
 
-You'll need to provide the correct path to your *.pem* file if you aren't, like me, running the command from the directory where the file is saved.
+You'll need to provide the correct path to your *.pem* file. If you aren't running the command above from the directory where the file is saved then provide the proper path to your _.pem_ file.
 
 
 
 ## Initial Setup
 
-For the most part I followed the instructions on JamieWeb with a few minor additions from this guide and various StackOverflow posts that I found as I ran in to issues. I'll elaborate on those as they are relevant but a non-insignificant amount of this guide is based on the JamieWeb page.
+For the most part I followed the instructions on JamieWeb with a few minor additions. I'll elaborate on those as they are relevant but a significant amount of this guide is based on the JamieWeb page.
 
-I am installing InspIRCd version 2.0.29. I was originally going to go with a 3+ version but I immediately ran into issues installing a MariaDB package on both Ubuntu 20 and 18 and became to frustrated to continue troubleshooting.
+I am installing InspIRCd version 2.0.29. I was originally going to go with a 3+ version but I immediately ran into issues installing a MariaDB package on both Ubuntu 20 and 18 and became too frustrated to continue troubleshooting.
 
-I didn't create a new, unprivileged user for installation. I just used the root user *ubuntu*. Maybe someone who is more security-minded can tell me why this is bad but it seems to me that this server is only running one thing and not in a network with anything else so how bad could it be?
+I didn't create a new, unprivileged user for installation. I just used the _ubuntu_ user that is provided with the Lightsail instance. Maybe someone who is more security-minded can tell me why this is bad.
 
 The first group of dependencies were recommended in [this guide](https://ubuntu.com/tutorials/irc-server#2-dependencies). I honestly don't know if they are essential but I installed them anyway.
 
@@ -98,13 +101,13 @@ sudo apt-get install perl g++ make
 sudo apt-get install libgnutls28-dev gnutls-bin pkg-config
 ```
 
-I also installed irssi as a client for testing my server:
+I also installed [irssi](https://irssi.org/) as a client for testing my server:
 
 ```
 sudo apt-get install irssi
 ```
 
-Then download the package, extract it, and configure by following the wizard. During the interactive wizard, I chose `y` for SSL with `gnutls` and `n` for SSL with `openssl`.
+Download the package, extract it, and configure by following the wizard. During the interactive wizard, I chose `y` for SSL with `gnutls` and `n` for SSL with `openssl`.
 
 ```
 https://github.com/inspircd/inspircd/archive/v2.0.29.tar.gz
@@ -159,7 +162,7 @@ Read through, follow the instructions, uncomment/change the bare minimum for now
 
 ### Secrets
 
-Some configuration files ask you to specify passwords. It's never a good idea to store a password in pain text. It is recommended to hash them using `mkpasswd`. However hashing won't work on your server until you enable certain a few modules:
+Some configuration files ask you to specify passwords. It's never a good idea to store a password in plain text. It is recommended to hash them using `mkpasswd`. However hashing won't work on your server until you enable certain a few modules:
 
 - m_md5.so
 
@@ -173,11 +176,12 @@ Most of the time enabling modules is easy. Just uncomment them in the modules fi
 nano run/conf/modules.conf
 ```
 
-Once you're inside the modules file find the lines for the appropriate modules and uncomment them. Occasionally, sometimes, maybe you will need to change other configurations for modules to work. This is one of the easy ones, though. Just uncomment and restart your server and password hashing will work.
+Once you're inside the modules file, find the lines for the appropriate modules and uncomment them. Restart your server and password hashing will work. Run the commands below to restart your server, connect, and use IRC to generate a hashed password.
 
 ```
 ./inspircd restart
 irssi
+/connect irc.assimilate.dev 6660
 /quote mkpassword hmac-sha256 apasswordyouwanthashed
 ```
 
@@ -198,7 +202,7 @@ Once this is done you should be able to login from a client like irssi.
 /oper operloginname apasswordyouwanthashed
 ```
 
-You can arrange your configuration files any which way you like by placing an an include block in *inspircd.conf*.
+Even though my passwords are hashed, I still store them in a separate file that is not checked in to source control. You can arrange your configuration files any which way you like and include configuration in other files by placing an an include block in *inspircd.conf*.
 
 ```
 <include file="conf/secrets.conf">
@@ -212,7 +216,7 @@ You can (and should) use this password hashing business to set a password for th
 
 ### Modules
 
-I am not going to go in-depth on configuring specific modules because otherwise this document would be infinitely longer. If you have questions about specific modules, feel free to ask. On my very small server I enabled the following during the initial setup:
+I am not going to go in-depth on configuring specific modules because otherwise this document would be considerably longer. If you have questions about specific modules, feel free to ask. On my very small server I enabled the following during the initial setup:
 
 - m_md5.so
 - m_sha256.so
@@ -230,15 +234,13 @@ I am not going to go in-depth on configuring specific modules because otherwise 
 
 ## SSL Certificates
 
-___
-
-I was dreading SSL certificates. I thought I was going to have to pay money either through AWS or some other certificate authority. Turns out you can do it all for free through [Let's Encrypt using certbot](https://certbot.eff.org/lets-encrypt/ubuntubionic-other). I follow the instructions for my setup and OS exactly, choosing the standalone option since (at the time) I didn't have a webserver running on the machine.
+I was dreading SSL certificates. I thought I was going to have to pay money either through AWS or some other certificate authority. Turns out you can do it all for free through [Let's Encrypt using certbot](https://certbot.eff.org/lets-encrypt/ubuntubionic-other). I followed the instructions for my setup and OS exactly, choosing the standalone option since (at the time) I didn't have a webserver running on the machine.
 
 ```
 sudo certbot certonly --standalone
 ```
 
-Certbot places your certificate files in `/etc/letsencrypt/live/irc.assimilate.dev/` directory. Obviously you should replace irc.assimilate.dev with your site indicated during configuration. These can be copied into various locations as needed for InspIRCd as well as Apache (later on in this document).
+Certbot places your certificate files in the `/etc/letsencrypt/live/<your_server>/` directory. These can be copied into various locations as needed for InspIRCd as well as Apache (later on in this document).
 
 Check my [*inspircd.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/inspircd.conf) file for ssl-specific setup paying close attention to the  gnutls and bind blocks.
 
@@ -256,7 +258,7 @@ Check my [*inspircd.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/
       ssl="gnutls">
 ```
 
-There are also modules that you will need to enable by uncommenting them in [*modules.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/modules.conf). I honestly can't remember which ones I enabled specifically for this but spend some time reading through the helpful comments in `docs/conf/modules.conf.example` and taking a look at the modules I have uncommented in my module file.
+There are also modules that you will need to enable by uncommenting them in [*modules.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/modules.conf). I honestly can't remember which ones I enabled for SSL. Spend some time reading through the helpful comments in `docs/conf/modules.conf.example` and taking a look at the modules I have uncommented in my module file.
 
 At the very least, I enabled the following:
 
@@ -273,9 +275,7 @@ You should know that the file naming is a little weird so here is the mapping:
 
 ## Anope Services
 
-___
-
-If you want to be able to register nicknames and channels with Nickserv and Chanserv, you need a services provider. I chose the latest release of [Anope](https://www.anope.org/) because it was there and I found what looked like a decent guide. Just like before, the vast majority of this guide comes copy/pasted from [another source](https://www.howtoforge.com/tutorial/how-to-build-your-own-irc-server-with-inspircd-and-anope/#step-install-and-configure-anope-services) and I will provide my update commentary where necessary.
+If you want to be able to register nicknames and channels with Nickserv and Chanserv, you need a services provider. I chose the latest release of [Anope](https://www.anope.org/) because it was there and I found what looked like a decent guide. Just like before, the vast majority of this guide comes copy/pasted from [another source](https://www.howtoforge.com/tutorial/how-to-build-your-own-irc-server-with-inspircd-and-anope/#step-install-and-configure-anope-services) and I will provide my commentary where relevant.
 
 
 
@@ -288,7 +288,7 @@ wget https://github.com/anope/anope/archive/2.0.8.tar.gz
 tar -xzvf 2.0.8.tar.gz
 ```
 
-Once that is complete you can run the configuration. The one thing I changed in the configuration was the directory where Anope is installed. When I setup InspIRCd I set the run folder as my git repository. Since I was looking to keep the configuration files for Anope sourced in the same repo I changed the installed directory to `~/inspircd-2.0.29/run/services/`.
+Once that is complete you can run the configuration. The one thing I changed in the configuration was the directory where Anope is installed. When I setup InspIRCd I set the run folder as the root for my git repository. Since I was looking to keep the configuration files for Anope sourced in the same repo I changed the installed directory to `~/inspircd-2.0.29/run/services/`.
 
 ```
 cd anope-2.0.8/
@@ -307,7 +307,7 @@ make install
 
 ### Configuration
 
-Once that is complete, you can do some cleanup and make your way to the services directory which is the install directory you indicated during the configuration.
+You can do some cleanup and make your way to the services directory which is the install directory you indicated during the configuration.
 
 ```
 cd ~
@@ -328,13 +328,6 @@ You can pretty much follow along exactly with the guide (though some of the line
       type="servers">
 ```
 
-If you're all done start it up and see what happens.
-
-```
-cd ~/inspircd-2.0.29/run/services/bin
-./anoperc start
-```
-
 There are also modules that you will need to enable by uncommenting them in [*modules.conf*](https://github.com/assimilate-dev/irc/blob/main/conf/modules.conf). I honestly can't remember which ones I enabled specifically for this but spend some time reading through the helpful comments in `docs/conf/modules.conf.example` and taking a look at the modules I have uncommented in my module file.
 
 At the very least, I enabled the following:
@@ -342,11 +335,24 @@ At the very least, I enabled the following:
 - m_spanningtree.so
 - m_sasl.so
 
+If you're all done start it up and see what happens.
+
+```
+cd ~/inspircd-2.0.29/run/services/bin
+./anoperc start
+```
+
+Now you should be able to register nicknames.
+
+```
+/msg NickServ REGISTER password [email]
+```
+
+
+
 
 
 ## Static Site @ irc.assimilate.dev
-
-___
 
 I really wanted a static site to show when visiting [irc.assimilate.dev](https://irc.assimilate.dev/) from a web browser. The first thing I should have done (but didn't) was revisit my Lightsail instance networking configuration to make sure that port 443 was open.
 
@@ -371,23 +377,11 @@ sudo apt install apache2
 
 That was enough to get me up and running at my public IP http://44.242.29.15/
 
-Because that IP is already pointed to [irc.assimilate.dev](https://irc.assimilate.dev/) I ignored the portion of the tutorial where they create the gci site. I only updated three files:
+Because that IP is already pointed to [irc.assimilate.dev](https://irc.assimilate.dev/), I ignored the portion of the tutorial where they create the gci site. I only updated three files:
 
 - [/var/www/html/index.html](https://github.com/assimilate-dev/irc/blob/main/apache-conf/index.html)
 - [/etc/apache2/sites-available/000-default.conf](https://github.com/assimilate-dev/irc/blob/main/apache-conf/000-default.conf)
 - [/etc/apache2/sites-available/default-ssl.conf](https://github.com/assimilate-dev/irc/blob/main/apache-conf/default-ssl.conf)
-
-I've added these three files to source control along with a script to copy them out of my git directory and into the place where Apache looks for them. I scheduled the script to run twice an hour at 05 and 35 minutes.
-
-```
-chmod +x copy-certs.sh
-sudo crontab -e
-
-# add this to the bottom of crontab, uncommented
-5,35 * * * * /home/ubuntu/inspircd-2.0.29/run/apache-conf/copy-conf.sh
-```
-
-This doesn't really do much except make sure I don't need to run copy commands after pulling the latest changes onto the server.
 
 I also had to copy my SSL certificate files into the location defined in the configuration.
 
@@ -399,7 +393,7 @@ sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/private/ir
 sudo cp /etc/letsencrypt/live/irc.assimilate.dev/chain.pem /etc/ssl/certs/ca-certificates.crt
 ```
 
-I could have probably kept them all in the place they were without duplication but I wasn't looking to add too many variables to the equation that could cause failure. Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
+Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
 
 ```
 sudo a2enmod ssl
@@ -413,8 +407,6 @@ I used [Typora](https://typora.io/) plus the Xydark theme to create my single pa
 
 
 ## Certificate Renewal
-
-___
 
 The certificates issued by certbot are valid for 90 days before they expire. To make sure these renew, I [scheduled a daily run](https://suchsecurity.com/using-letsencrypt-for-your-ircd.html) of [copy-certs.sh](https://github.com/assimilate-dev/irc/blob/main/copy-certs.sh).
 
