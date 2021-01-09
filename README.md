@@ -331,7 +331,7 @@ You can pretty much follow along exactly with the guide (though some of the line
 If you're all done start it up and see what happens.
 
 ```
-cd ~/inspircd-2.0.29/run/services
+cd ~/inspircd-2.0.29/run/services/bin
 ./anoperc start
 ```
 
@@ -396,7 +396,7 @@ sudo cp /etc/letsencrypt/live/irc.assimilate.dev/fullchain.pem /etc/ssl/certs/ir
 
 sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/private/irc.assimilate.dev.key
 
-sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/certs/ca-certificates.crt
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/chain.pem /etc/ssl/certs/ca-certificates.crt
 ```
 
 I could have probably kept them all in the place they were without duplication but I wasn't looking to add too many variables to the equation that could cause failure. Once the files were in place I [enabled ssl](https://www.linode.com/docs/guides/ssl-apache2-debian-ubuntu/) and reloaded Apache.
