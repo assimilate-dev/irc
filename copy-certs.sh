@@ -1,11 +1,16 @@
 #!/bin/bash
 
-sudo certbot renew -n -q --webroot
+sudo service apache2 stop
+sudo certbot renew -n -q
+
 sudo cp /etc/letsencrypt/live/irc.assimilate.dev/fullchain.pem /home/ubuntu/inspircd-2.0.29/run/conf/cert.pem
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /home/ubuntu/inspircd-2.0.29/run/conf/key.pem
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/chain.pem /home/ubuntu/inspircd-2.0.29/run/conf/ca.pem
+
 sudo cp /etc/letsencrypt/live/irc.assimilate.dev/fullchain.pem /etc/ssl/certs/irc.assimilate.dev.crt
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/privkey.pem /etc/ssl/private/irc.assimilate.dev.key
+sudo cp /etc/letsencrypt/live/irc.assimilate.dev/chain.pem /etc/ssl/certs/ca-certificates.crt
 
-sudo chown ubuntu:ubuntu /home/ubuntu/inspircd-2.0.29/run/conf/*
-sudo chown ubuntu:ubuntu /etc/ssl/certs/*
-
-/home/ubuntu/inspircd-2.0.29/run/inspircd rehash
-sudo service apache2 reload
+sudo service apache2 start
+/home/ubuntu/inspircd-2.0.29/run/inspircd start
+/home/ubuntu/inspircd-2.0.29/run/services/bin/anoperc start
